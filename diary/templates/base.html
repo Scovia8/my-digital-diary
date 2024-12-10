@@ -4,11 +4,11 @@
 <html>
 <head>
 
-    <!-- Required meta tags -->
+    
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS -->
+    
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'main.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200&display=swap" rel="stylesheet">
@@ -29,10 +29,8 @@
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-{#              <a class="nav-item nav-link" href="#">Login</a>#}
-{#              <a class="nav-item nav-link" href="#">Register</a>#}
-{#               <button class="noselect">Create Post</button> #}
-               <h3 style="color: white;">Hello {{request.user}}</h3>
+                    
+           <h3 style="color: white;">Hello {{request.user}}</h3>
                 <a href="{% url 'blog-new' %}" id="auth-links">
                 <span></span>
                 <span></span>
@@ -92,18 +90,9 @@
         </div>
         <div class="col-md-4">
           <div class="content-section">
-            <!-- <h3>Our Sidebar</h3>
-            <p class='text-muted'>You can put any information here you'd like.
-              <ul class="list-group">
-                <li class="list-group-item list-group-item-light">Latest Posts</li>
-                <li class="list-group-item list-group-item-light">Announcements</li>
-                <li class="list-group-item list-group-item-light">Calendars</li>
-                <li class="list-group-item list-group-item-light">etc</li>
-              </ul>
-            </p> -->
             <div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white" style="width: 380px;" style="padding-top: 120px;">
                 <a id="list-group" style="text-decoration: none;" href="" class="d-flex align-items-center flex-shrink-0 p-3 link-dark text-decoration-none border-bottom">
-                  <!-- <svg class="bi me-2" width="30" height="24"><use xlink:href="#bootstrap"/></svg> -->
+{#                   <svg class="bi me-2" width="30" height="24"><use xlink:href="#bootstrap"/></svg> #}
                   <span class="fs-5 fw-semibold" id="gist-btn">Latest Gist</span>
                 </a>
                 <div class="list-group list-group-flush border-bottom scrollarea">
@@ -117,14 +106,14 @@
                   </a>
                   <a href="#" class="list-group-item list-group-item-action py-3 lh-tight">
                     <div class="d-flex w-100 align-items-center justify-content-between">
-                      <strong class="mb-1">Its not a bug - It's a feature... by Scovia</strong>
+                      <strong class="mb-1">Its not a bug - It's a feature... by Sco</strong>
                       <small class="text-muted">Thur</small>
                     </div>
                     <div class="col-10 mb-1 small">When it comes to coding, everything works like a miracle, let me use that word...hahaha</div>
                   </a>
                   <a href="#" class="list-group-item list-group-item-action py-3 lh-tight">
                     <div class="d-flex w-100 align-items-center justify-content-between">
-                      <strong class="mb-1">I wanted to be a great programmer but...by Scovia</strong>
+                      <strong class="mb-1">I wanted to be a great programmer but...by Mike</strong>
                       <small class="text-muted">Wed</small>
                     </div>
                     <div class="col-10 mb-1 small">in my family trait, nobody knows anything about computers and i wanted to be the greatest computer scientist ever and...</div>

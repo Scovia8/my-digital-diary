@@ -1,7 +1,7 @@
 body {
      /* background: linear-gradient(to bottom right,#002f4b, #dc4225); */
     /* color: #333333;  */
-    background-color: rgb(232, 140, 140);
+    background-color: rgb(140, 174, 211);
     margin-top: 5rem;
     background-size: contain;
     background-repeat: no-repeat;
@@ -19,7 +19,7 @@ body {
 
   .bg-steel {
     /* background-color: #1a1a1a; */
-    background: linear-gradient(270deg, rgb(11, 54, 96) 0%, rgb(109, 166, 223) 100%);
+    background: linear-gradient(270deg, rgb(38, 43, 48) 0%, rgb(71, 133, 195) 100%);
 
   }
 

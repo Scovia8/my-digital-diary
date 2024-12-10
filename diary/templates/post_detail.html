@@ -1,66 +1,104 @@
 {% extends 'base.html' %}
 {% block content %}
+    {% if messages %}
+        <ul class="alert-list">
+            {% for message in messages %}
+                <li class="alert alert-{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 
-        <article class="media content-section">
-            <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}" alt="">
-            <div class="media-body">
-              <div class="article-metadata">
+    <article class="media content-section">
+        <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}" alt="">
+        <div class="media-body">
+            <div class="article-metadata">
                 <a class="mr-2" href="#">{{ object.author }}</a>
                 <small class="text-muted">{{ object.date_posted }}</small> <br>
-                  {% if object.author == user %}
-
+                {% if object.author == user %}
                     <div>
                         <a class="btn btn-outline-success" href="{% url 'blog-update' object.id %}">Update</a>
                         <a class="btn btn-outline-danger" href="{% url 'blog-delete' object.id %}">Delete</a>
                     </div>
-                  {% endif %}
-              </div>
-              <h2><a class="article-title" href="#">{{ object.title }}</a></h2>
-              <p class="article-content">{{ object.content }}</p>
+                {% endif %}
             </div>
-            <br>
-          </article>
-     
-  <div class="container my-5 py-5 text-body">
-   <h3>Comments....</h3>
-    {% for comment in comments %}
-    <div class="row d-flex justify-content-center">
-      <div class="col-md-11 col-lg-9 col-xl-7">
-        <div class="d-flex flex-start mb-4">
-          <img class="rounded-circle shadow-1-strong me-3"
-            src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/img%20(32).webp" alt="avatar" width="65"
-            height="65" />
-          <div class="card w-100">
-            <div class="card-body p-4">
-              <div class="">
-                <h5>{{ comment.name }}</h5>
-                <p class="small">{{ comment.created_on }}</p>
-                <p>
-                 {{ comment.body }}
-                </p>
-                  
-                  </div>
-                  <a href="#!" class="link-muted"><i class="fas fa-reply me-1"></i> Reply</a>
-                 </div>
+            <h2><a class="article-title" href="#">{{ object.title }}</a></h2>
+            <p class="article-content">{{ object.content }}</p>
+        </div>
+        <br>
+    </article>
+
+    <div class="container my-5 py-5 text-body">
+        <h3>Comments....</h3>
+        {% for comment in comments %}
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-11 col-lg-9 col-xl-7">
+                    <div class="d-flex flex-start mb-4">
+                        <img class="rounded-circle shadow-1-strong me-3"
+                             src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/img%20(32).webp" alt="avatar" width="65"
+                             height="65" />
+                        <div class="card w-100">
+                            <div class="card-body p-4">
+                                <div>
+                                    <h5 class="text-info">{{ comment.name }}</h5>
+                                    <p class="small">{{ comment.created_on }}</p>
+                                    <p class="text-danger">
+                                        {{ comment.body }}
+                                    </p>
+                                    <!-- Reply button -->
+                                    <button 
+                                        class="btn btn-link text-primary p-0" 
+                                        onclick="toggleReplyBox('{{ comment.id }}')">
+                                        Reply
+                                    </button>
+
+                                    <!-- Hidden reply box -->
+                                    <div id="reply-box-{{ comment.id }}" style="display: none; margin-top: 10px;">
+                                        <form method="POST" action="{% url 'add_reply' comment.id %}">
+                                            {% csrf_token %}
+                                            <textarea 
+                                                name="reply_body" 
+                                                rows="3" 
+                                                class="form-control" 
+                                                placeholder="Write your reply..." 
+                                                required></textarea>
+                                            <br>
+                                            <button type="submit" class="btn btn-success btn-sm">Submit Reply</button>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-secondary btn-sm" 
+                                                onclick="toggleReplyBox('{{ comment.id }}')">
+                                                Cancel
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-        </div>
+            </div>
+            <hr>
+        {% empty %}
+            <p>No comments yet. Be the first to comment!</p>
+        {% endfor %}
         <hr>
-    {% empty %}
-    <p>No comments yet. Be the first to comment!</p>
-    {% endfor %}
-  <hr>
 
-  <h4>Add a Comment</h4>
-   <form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Submit</button>
-   </form>
-</div>
-       
-    
-  
+        <h4>Add a Comment</h4>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
 
+    <script>
+        function toggleReplyBox(commentId) {
+            const replyBox = document.getElementById(`reply-box-${commentId}`);
+            if (replyBox.style.display === "none") {
+                replyBox.style.display = "block";
+            } else {
+                replyBox.style.display = "none";
+            }
+        }
+    </script>
 {% endblock content %}

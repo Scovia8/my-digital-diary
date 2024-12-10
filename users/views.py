@@ -1,9 +1,30 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import UserRegisterForm, ProfileUpdateForm, UserUpdateForm
+from .forms import UserRegisterForm, ProfileUpdateForm, UserUpdateForm,LoginForm
 from django.contrib.auth.decorators import login_required
+from django.views import View
 
+
+
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home')  # Replace with the appropriate view name
+            else:
+                messages.error(request, "Invalid username or password.")
+        else:
+            messages.error(request, "Please fill in the form correctly.")
+    else:
+        form = LoginForm()
+
+    return render(request, 'login.html', {'form': form})
 
 def register(request):
     if request.method == "POST":
@@ -45,5 +66,10 @@ def profile_update(request):
         "p_form": p_form
     }
     return render(request, 'profile_update.html', context)
+
+
+def logout_view(request):
+    logout(request)
+    return render(request, 'logout.html')
 
 # Create your views here.
