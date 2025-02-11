@@ -1,22 +1,70 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
-
 {% block content %}
     <div class="content-section">
-        <form action="" method="post">
-          {% csrf_token %}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
             <fieldset class="form-group">
                 <legend class="border-bottom mb-4">New Post</legend>
-                {{ form|crispy }}
+                {{ form|crispy }} 
+                
+                <h5 class="mt-3"> Record a Video</h5>
+               
+                <div class="text-center">
+                    <video id="preview" autoplay class="border rounded" style="max-width: 100%; height: auto;"></video>
+                    <br>
+                    <button type="button" id="start" class="btn btn-success mt-2">📹 Start Recording</button>
+                    <button type="button" id="stop" class="btn btn-danger mt-2" disabled>⏹ Stop Recording</button>
+                </div>
+
+                <video id="recordedVideo" controls class="mt-3 border rounded" style="display: none; max-width: 100%; height: auto;"></video>
+                <input type="file" name="video" id="videoInput" style="display: none;">
             </fieldset>
-            <div class="form-group">
+
+            <div class="form-group mt-3">
                 <button class="btn btn-outline-info" type="submit">Post</button>
             </div>
-
         </form>
-        <div class="border-top pt-3">
-            <small class="text-muted">Already have an account? <a href="{% url 'blog-home' %}">Go Back</a></small>
-        </div>
     </div>
+
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        document.getElementById("start").addEventListener("click", async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            document.getElementById("preview").srcObject = stream;
+
+            recordedChunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = event => recordedChunks.push(event.data);
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: "video/mp4" });
+                const videoURL = URL.createObjectURL(blob);
+                document.getElementById("recordedVideo").src = videoURL;
+                document.getElementById("recordedVideo").style.display = "block";
+
+                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                document.getElementById("videoInput").files = dataTransfer.files;
+            };
+
+            mediaRecorder.start();
+            document.getElementById("start").disabled = true;
+            document.getElementById("stop").disabled = false;
+        });
+
+        document.getElementById("stop").addEventListener("click", () => {
+            mediaRecorder.stop();
+            document.getElementById("start").disabled = false;
+            document.getElementById("stop").disabled = true;
+        });
+
+        document.getElementById("videoUpload").addEventListener("change", () => {
+            document.getElementById("recordedVideo").style.display = "none";
+        });
+    </script>
 {% endblock content %}

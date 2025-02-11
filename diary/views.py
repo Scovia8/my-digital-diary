@@ -1,19 +1,29 @@
-
-
 from django.shortcuts import render, get_object_or_404, redirect
 # from django.http import HttpResponse
 from .models import Post
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.views.generic.edit import FormMixin
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .forms import CommentForm,ReplyForm
-from .models import Comment,BlogPost
+from .forms import CommentForm, ReplyForm, PostForm
+from .models import Comment, BlogPost
 
 
 def latest_posts(request):
     posts = BlogPost.objects.order_by('-created_at')[:3]
     print(f"Latest Posts: {latest_posts}")
     return render(request, 'home.html', {'posts': posts})
+
+
+def create_post(request):
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return redirect('blog-detail', pk=post.pk)
+    else:
+        form = PostForm()
+    return render(request, 'post_form.html', {'form': form})
 
 
 def home(request):
@@ -33,36 +43,33 @@ class PostListView(LoginRequiredMixin, ListView):
     context_object_name = 'posts'
     ordering = ["-date_posted"]
 
-class PostDetailView(LoginRequiredMixin, FormMixin, DetailView):
+
+class PostDetailView(LoginRequiredMixin, DetailView):
     model = Post
-    form_class = CommentForm
     template_name = 'post_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = self.get_form()
-        context['comments'] = Comment.objects.filter(post=self.object)
-        context['post_id'] = self.object.id
+        context['comment_form'] = CommentForm()  # Use one form for both comments and replies
+        context['comments'] = Comment.objects.filter(post=self.object, parent=None)  # Only top-level comments
         return context
-
-
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        form = self.get_form()
+        context = self.get_context_data(**kwargs)
+        form = CommentForm(request.POST, request.FILES)  # Handle file uploads for comments
         if form.is_valid():
-
             comment = form.save(commit=False)
             comment.post = self.object
-            comment.author = request.user
+            comment.name = request.user.username  # or however you identify users
+            parent_id = request.POST.get('parent_id')  # Check for parent comment ID
+            if parent_id:
+                comment.parent = get_object_or_404(Comment, id=parent_id)
             comment.save()
-            return self.form_valid(form)
+            return redirect(self.object.get_absolute_url())
         else:
-            return self.form_invalid(form)
-
-    def form_valid(self, form):
-
-        return redirect(self.object.get_absolute_url())
+            context['comment_form'] = form  # Add the form with errors to the context
+            return self.render_to_response(self.get_context_data(form=form))
 
 
 def add_reply(request, comment_id):
@@ -79,6 +86,7 @@ def add_reply(request, comment_id):
         form = ReplyForm()
 
     return render(request, 'post_detail.html', {'form': form})
+
 
 def post_detail(request, slug):
     template_name = 'post_detail.html'
@@ -102,12 +110,13 @@ def post_detail(request, slug):
             return redirect('post_detail', slug=slug)
     else:
         comment_form = CommentForm()
-    return render(request, template_name, {'post': post, 'comments': comments, 'comment_form': comment_form, "new_comments" : new_comments})
+    return render(request, template_name,
+                  {'post': post, 'comments': comments, 'comment_form': comment_form, "new_comments": new_comments})
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    fields = ['title', 'content']
+    form_class = PostForm  # Use the form that includes image and video
     template_name = 'post_form.html'
 
     def form_valid(self, form):
@@ -123,7 +132,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    fields = ['title', 'content']
+    form_class = PostForm  # Use the form that includes image and video
     template_name = 'post_form.html'
 
     def form_valid(self, form):
@@ -132,9 +141,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         post = self.get_object()
-        if self.request.user == post.author:
-            return True
-        return False
+        return self.request.user == post.author
 
 
 class PostDeleteView(DeleteView):
@@ -144,6 +151,7 @@ class PostDeleteView(DeleteView):
 
     def test_func(self):
         post = self.get_object()
+        assert isinstance(post.author, object)
         if self.request.user == post.author:
             return True
         return False

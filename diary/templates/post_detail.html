@@ -1,104 +1,87 @@
 {% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
 {% block content %}
-    {% if messages %}
-        <ul class="alert-list">
-            {% for message in messages %}
-                <li class="alert alert-{{ message.tags }}">{{ message }}</li>
-            {% endfor %}
-        </ul>
+    <h1>{{ post.title }}</h1>
+    <p>{{ post.content }}</p>
+
+    {% if post.image %}
+        <img src="{{ post.image.url }}" alt="Post Image" style="max-width: 100%;">
     {% endif %}
 
-    <article class="media content-section">
-        <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}" alt="">
-        <div class="media-body">
-            <div class="article-metadata">
-                <a class="mr-2" href="#">{{ object.author }}</a>
-                <small class="text-muted">{{ object.date_posted }}</small> <br>
-                {% if object.author == user %}
-                    <div>
-                        <a class="btn btn-outline-success" href="{% url 'blog-update' object.id %}">Update</a>
-                        <a class="btn btn-outline-danger" href="{% url 'blog-delete' object.id %}">Delete</a>
-                    </div>
-                {% endif %}
+    {% if post.video %}
+        <video width="100%" controls>
+            <source src="{{ post.video.url }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    {% endif %}
+
+    <h2>Comments</h2>
+
+    {% for comment in comments %}
+        <div class="comment">
+            <p>{{ comment.name }}: {{ comment.body }}</p>
+
+            {% if comment.image %}
+                <img src="{{ comment.image.url }}" alt="Comment Image" style="max-width: 100px;">
+            {% endif %}
+
+            {% if comment.video %}
+                <video width="200" controls>
+                    <source src="{{ comment.video.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            {% endif %}
+
+
+            <p class="small text-muted">{{ comment.created_on }}</p>
+            <button onclick="toggleReplyForm({{ comment.id }})">Reply</button>
+
+            <div id="reply-form-{{ comment.id }}" style="display: none;">
+                <form method="post" enctype="multipart/form-data">  {% csrf_token %}
+                    {{ comment_form|crispy }}  {% comment %} Render the form fields {% endcomment %}
+                    <input type="hidden" name="parent_id" value="{{ comment.id }}">  {% comment %} Hidden input for parent comment ID {% endcomment %}
+                    <button type="submit">Submit Reply</button>
+                </form>
             </div>
-            <h2><a class="article-title" href="#">{{ object.title }}</a></h2>
-            <p class="article-content">{{ object.content }}</p>
-        </div>
-        <br>
-    </article>
 
-    <div class="container my-5 py-5 text-body">
-        <h3>Comments....</h3>
-        {% for comment in comments %}
-            <div class="row d-flex justify-content-center">
-                <div class="col-md-11 col-lg-9 col-xl-7">
-                    <div class="d-flex flex-start mb-4">
-                        <img class="rounded-circle shadow-1-strong me-3"
-                             src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/img%20(32).webp" alt="avatar" width="65"
-                             height="65" />
-                        <div class="card w-100">
-                            <div class="card-body p-4">
-                                <div>
-                                    <h5 class="text-info">{{ comment.name }}</h5>
-                                    <p class="small">{{ comment.created_on }}</p>
-                                    <p class="text-danger">
-                                        {{ comment.body }}
-                                    </p>
-                                    <!-- Reply button -->
-                                    <button 
-                                        class="btn btn-link text-primary p-0" 
-                                        onclick="toggleReplyBox('{{ comment.id }}')">
-                                        Reply
-                                    </button>
 
-                                    <!-- Hidden reply box -->
-                                    <div id="reply-box-{{ comment.id }}" style="display: none; margin-top: 10px;">
-                                        <form method="POST" action="{% url 'add_reply' comment.id %}">
-                                            {% csrf_token %}
-                                            <textarea 
-                                                name="reply_body" 
-                                                rows="3" 
-                                                class="form-control" 
-                                                placeholder="Write your reply..." 
-                                                required></textarea>
-                                            <br>
-                                            <button type="submit" class="btn btn-success btn-sm">Submit Reply</button>
-                                            <button 
-                                                type="button" 
-                                                class="btn btn-secondary btn-sm" 
-                                                onclick="toggleReplyBox('{{ comment.id }}')">
-                                                Cancel
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            {% for reply in comment.parent_replies.all %}  {% comment %} Replies to this comment {% endcomment %}
+                <div class="comment reply">
+                    <p>{{ reply.name }}: {{ reply.body }}</p>
+
+                    {% if reply.image %}
+                        <img src="{{ reply.image.url }}" alt="Reply Image" style="max-width: 100px;">
+                    {% endif %}
+
+                    {% if reply.video %}
+                        <video width="200" controls>
+                            <source src="{{ reply.video.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    {% endif %}
+
+                    <p class="small text-muted">{{ reply.created_on }}</p>
                 </div>
-            </div>
-            <hr>
-        {% empty %}
-            <p>No comments yet. Be the first to comment!</p>
-        {% endfor %}
-        <hr>
+            {% endfor %}
 
-        <h4>Add a Comment</h4>
-        <form method="POST">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-    </div>
+        </div>
+        <hr>
+    {% empty %}
+        <p>No comments yet.</p>
+    {% endfor %}
+
+    <h2>Add a Comment</h2>
+    <form method="post" enctype="multipart/form-data">  {% csrf_token %}
+        {{ comment_form|crispy }}  {% comment %} Use the same form for top-level comments {% endcomment %}
+        <button type="submit">Submit Comment</button>
+    </form>
+
 
     <script>
-        function toggleReplyBox(commentId) {
-            const replyBox = document.getElementById(`reply-box-${commentId}`);
-            if (replyBox.style.display === "none") {
-                replyBox.style.display = "block";
-            } else {
-                replyBox.style.display = "none";
-            }
+        function toggleReplyForm(commentId) {
+            const replyForm = document.getElementById(`reply-form-${commentId}`);
+            replyForm.style.display = (replyForm.style.display === "none") ? "block" : "none";
         }
     </script>
-{% endblock content %}
+{% endblock %}
